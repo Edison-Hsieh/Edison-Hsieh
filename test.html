@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style>
+        html,
+        body {
+            width: 80%;
+            height: 80%;
+        }
+
+        body {
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #app {
+            width: 400px;
+        }
+
+        #app>* {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <el-input v-model="strexp" placeholder="请输入表达式" @change="calc()" autofocus></el-input>
+        <el-button type="primary" @click="calc">计算</el-button>
+        <el-button type="danger" @click="clear">清空</el-button>
+        <el-input v-model="result" placeholder="结果"></el-input>
+        <!-- <el-button type="primary" @click="getnow">计算</el-button> -->
+    </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+
+
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            strexp: '',
+            result: '',
+            stack: [],
+            operators: '+-*/',
+            nums: '0123456789',
+            high: '*/',
+            low: '+-'
+        },
+        methods: {
+            getvalue(valstr) {
+                return valstr;
+            },
+
+            strexp2stack() {
+
+                this.strexp = this.strexp.trim();
+
+                for (let i = 0; i < this.strexp.length; i++) {
+
+                    if (this.hasn(this.strexp[i])) {
+                        let number = '';
+
+                        while (this.hasn(this.strexp[i])) {
+                            number += this.strexp[i];
+                            i++;
+                        }
+
+                        this.stack[this.stacklen()] = parseInt(number);
+                        number = '';
+                    }
+
+                    if (this.haso(this.strexp[i])) {
+                        this.stack[this.stacklen()] = this.strexp[i];
+                    }
+                }
+
+            },
+
+            stack2result() {
+
+
+                this.cacl_high();
+
+                let clean_stack = [];
+                for (let i = 0; i < this.stack.length; i++)
+                    if (this.stack[i] != '')
+                        clean_stack[clean_stack.length] = this.stack[i];
+                
+                console.log(clean_stack);
+
+                let result = clean_stack[0];
+
+                for (let i = 1; i < clean_stack.length; i++)
+                {
+                    let operator = clean_stack[i++];
+                    let right = clean_stack[i];
+                    result = this.calc_temp(result, operator, right);
+                }
+
+                this.result = result;
+                console.log(this.result)
+            },
+
+            cacl_high() {
+
+                for (let mul = this.stack.indexOf('*'), div = this.stack.indexOf('*'); mul > 0 || div > 0; mul = this.stack.indexOf('*'), div = this.stack.indexOf('*')) {
+                    
+                    let calc_pos;
+                    
+                    if (mul < 0)   
+                        calc_pos = div;
+                    else if (div < 0)
+                        calc_pos = mul;
+                    else 
+                        calc_pos = mul < div ? mul : div;
+
+                    this.stack[calc_pos] = this.calc_temp(this.stack[calc_pos - 1], this.stack[calc_pos], this.stack[calc_pos + 1]);
+                  
+                    this.stack[calc_pos - 1] = '';
+                    this.stack[calc_pos + 1] = '';
+
+                }
+
+            },
+
+
+            calc_temp(left, operator, right) {
+                if (operator == '+')
+                    return left + right;
+                else if (operator == '-')
+                    return left - right;
+                else if (operator == '*')
+                    return left * right;
+                else if (operator == '/')
+                    return left / right;
+            },
+
+            haso(operator) {
+                if (this.operators.indexOf(operator) >= 0 && operator.length == 1)
+                    return true;
+                return false;
+            },
+
+            hasn(number) {
+                if (this.nums.indexOf(number) >= 0)
+                    return true;
+                return false;
+            },
+
+            ishigh(operator) {
+                if (this.high.indexOf(operator) >= 0)
+                    return true;
+                return false;
+            },
+
+            islow(operator) {
+                if (this.low.indexOf(operator) >= 0)
+                    return true;
+                return false;
+            },
+
+            stacklen() {
+                return this.stack.length;
+            },
+
+            calc() {
+                this.stack = [];
+                this.strexp2stack();
+                this.stack2result();
+
+
+            },
+
+            clear() {
+                this.result = this.strexp = '';
+                this.stack = [];
+            },
+
+
+        },
+
+
+    })
+</script>
+
+</html>
